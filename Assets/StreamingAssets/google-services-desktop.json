@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "420891439018",
     "project_id": "unity-trpg",
-    "storage_bucket": "unity-trpg.appspot.com"
+    "storage_bucket": "unity-trpg.firebasestorage.app"
   },
   "client": [
     {
@@ -12,7 +12,20 @@
           "package_name": "com.anmsg98.trpg"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "420891439018-cp675e4lfba9p3dq1e1s0pe00rd2j9vr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anmsg98.trpg",
+            "certificate_hash": "6f42e7aca260c9ac6d1922eb5af92ca7cc487201"
+          }
+        },
+        {
+          "client_id": "420891439018-6njr6rivluqb0405gdumhjq7lqgqddhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDvdHS572g4_rEGY6ZAuMnmDd4FXG2-QE4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "420891439018-6njr6rivluqb0405gdumhjq7lqgqddhs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

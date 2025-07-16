@@ -8,7 +8,7 @@ public class MenuScene : MonoBehaviour
     public TMP_Text userInfo;
     void Start()
     {
-        userInfo.text = PlayerInfo.auth.CurrentUser.Email + "님이 로그인 하였습니다.";
+        //userInfo.text = PlayerInfo.auth.CurrentUser.Email + "님이 로그인 하였습니다.";
     }
 
     // Update is called once per frame

@@ -14,7 +14,6 @@ public class TitleScene : MonoBehaviour
     void Start()
     {
         android = 1;
-        userInfo.text += PlayerInfo.auth.CurrentUser.UserId;
     }
     
     void Update()

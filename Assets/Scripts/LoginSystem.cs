@@ -1,127 +1,106 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System.Threading.Tasks;
+using Firebase;
 using Firebase.Auth;
 using Firebase.Extensions;
+using Google;
 using TMPro;
-using UnityEngine.SceneManagement;
-using System.IO;
-using Unity.VisualScripting;
-using UnityEngine.UIElements;
-using Image = UnityEngine.UI.Image;
-
-public class LoginSystem : MonoBehaviour
+using UnityEngine;
+public class LoginSystem: MonoBehaviour
 {
-    private FirebaseAuth auth;
-    private bool checkBox = false;
+//private GoogleSignInConfiguration configuration;
+//Firebase.DependencyStatus dependencyStatus = Firebase. DependencyStatus. UnavailableOther;
+    Firebase.Auth.FirebaseAuth auth;
+    Firebase.Auth.FirebaseUser user;
+    [SerializeField]
+    private TextMeshProUGUI test;
     
-    public TMP_InputField id;
-    public TMP_InputField pw;
-    public TMP_Text messageUI;
-
-    public Image checkBoxImg;
+    public TextMeshProUGUI Username, UserEmail;
     
-    void Start()
+    public GameObject LoginScreen, ProfileScreen;
+    private void Start()
     {
-        CheckData();
-        Application.targetFrameRate = 60;
-        auth = FirebaseAuth.DefaultInstance;
-        LoadLoginSetting();
-        messageUI.text = "";
+        InitFirebase();
     }
-
-    public void Login()
+    void InitFirebase()
     {
-        string email = id.text;
-        string password = pw.text;
-        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(
-            task =>
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
+            if (task.Result == DependencyStatus. Available)
             {
-                if (!task.IsCanceled && !task.IsFaulted)
+                auth = FirebaseAuth.DefaultInstance;
+                Debug.Log("Firebase Auth initializedsuccessfully.");
+            }
+            else
+            {
+                Debug.LogError("Could not resolve Firebasedependencies: " + task.Result);
+            }
+        });
+    }
+    public void GoogleSignInClick()
+    {
+        try
+        {
+            GoogleSignIn.Configuration = new
+                GoogleSignInConfiguration
                 {
-                    PlayerInfo.auth = auth;
-                    SaveId();
-                    SceneManager.LoadScene("TitleScene");
+                    WebClientId = "anmsg98",
+                    RequestIdToken = true,
+                    UseGameSignIn = false,
+                    RequestEmail = true
+                };
+            GoogleSignIn.DefaultInstance.SignIn().ContinueWith (task =>
+            {
+                if (task.IsFaulted)
+                {
+                    test.text += "SignIn Erгог:" + task. Exception;
+                }
+                else if (task. IsCanceled)
+                {
+                    test.text += "SignIn Canceled: ";
                 }
                 else
                 {
-                    messageUI.text = "계정을 다시 확인하여 주십시오.";
+                    OnGoogleAuthenticatedFinished(task);
                 }
-            }
-        );
-    }
-
-    public void JoinSceneLoad()
-    {
-        SceneManager.LoadScene("JoinScene");
-    }
-
-    public void LoadLoginSetting()
-    {
-        string txtFile = Application.persistentDataPath + "/SaveEmail.txt";
-    
-        FileStream filestream = new FileStream(txtFile, FileMode.Open, FileAccess.Read);
-        StreamReader sr = new StreamReader(filestream, System.Text.Encoding.UTF8);
-        string line;
-        line = sr.ReadLine();
-        id.text = line.Split(' ')[1];
-        line = sr.ReadLine();
-        if (Convert.ToInt32(line.Split(' ')[1]) == 1)
+            });
+        }
+        catch (Exception ex)
         {
-            checkBox = true;
-            checkBoxImg.sprite = Resources.Load<Sprite>("Sprites/checkOn");
+            test.text += "GoogleSignInClick Exception: "+ ex.Message;
+        }
+    }
+    void OnGoogleAuthenticatedFinished (Task<GoogleSignInUser>
+        task)
+    {
+        if (task.IsFaulted)
+        {
+            Debug.LogError("Faulted");
+        }
+        else if (task. IsCanceled)
+        {
+            Debug.LogError("Cancelled");
         }
         else
         {
-            checkBox = false;
-            checkBoxImg.sprite = Resources.Load<Sprite>("Sprites/checkOff");
-        }
-        sr.Close();
-        filestream.Close();
-    }
-    public void SaveId()
-    {
-        //string path = "Assets/Resources/Option/SaveEmail.txt";
-        string path = Application.persistentDataPath+"/SaveEmail.txt";
-        StreamWriter writer = new StreamWriter(path, false);
-        if (checkBox)
-        {
-            writer.WriteLine("ID " + auth.CurrentUser.Email);
-            writer.WriteLine("CheckBox 1" );
-        }
-        else
-        {
-            writer.WriteLine("ID ");
-            writer.WriteLine("CheckBox 0");
-        }
-        writer.Close();
-    }
-
-    public void CheckOn()
-    {
-        if (checkBox)
-        {
-            checkBoxImg.sprite = Resources.Load<Sprite>("Sprites/checkOff");
-            checkBox = false;
-        }
-        else
-        {
-            checkBoxImg.sprite = Resources.Load<Sprite>("Sprites/checkOn");
-            checkBox = true;
-        }
-    }
-
-    private void CheckData()
-    {
-        string path = Application.persistentDataPath+"/SaveEmail.txt";
-        bool fileExist = File.Exists(path);
-        if (!fileExist) 
-        {
-            StreamWriter writer = new StreamWriter(path, false);
-            writer.WriteLine("ID ");
-            writer.WriteLine("CheckBox 0");
-            writer.Close();
+            Firebase.Auth.Credential credential =
+                Firebase.Auth.GoogleAuthProvider.GetCredential (task. Result. IdToken,null);
+            auth. SignInWithCredentialAsync(credential).ContinueWithOnMainThread(task => {
+                if (task. IsCanceled)
+                {
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("SignInWithCredentialAsyncencountered an error: "+ task. Exception);
+                    return;
+                }
+                user = auth.CurrentUser;
+                Username.text = user.DisplayName;
+                UserEmail.text = user.Email;
+                LoginScreen.SetActive (false);
+                ProfileScreen.SetActive(true);
+                //StartCoroutine (LoadImage(CheckImageUrl(user.PhotoUrl.ToString())));
+            });
         }
     }
 }
