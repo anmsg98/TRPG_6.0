@@ -1,106 +1,94 @@
 using System;
-using System.Threading.Tasks;
+using UnityEngine;
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Extensions;
-using Google;
-using TMPro;
-using UnityEngine;
-public class LoginSystem: MonoBehaviour
+public class LoginSystem : MonoBehaviour
 {
-//private GoogleSignInConfiguration configuration;
-//Firebase.DependencyStatus dependencyStatus = Firebase. DependencyStatus. UnavailableOther;
-    Firebase.Auth.FirebaseAuth auth;
-    Firebase.Auth.FirebaseUser user;
-    [SerializeField]
-    private TextMeshProUGUI test;
-    
-    public TextMeshProUGUI Username, UserEmail;
-    
-    public GameObject LoginScreen, ProfileScreen;
-    private void Start()
+    public FirebaseAuth Auth { get; private set; }
+    public FirebaseUser User { get; private set; }
+    public bool IsLoggedIn { get; private set; }
+
+    public void start()
     {
-        InitFirebase();
+    }// public void Initialize()
+    // {
+    //     var config = new PlayGamesClientConfiguration.Builder().RequestIdToken().Build();
+    //
+    //     PlayGamesPlatform.InitializeInstance(config);
+    //     PlayGamesPlatform.DebugLogEnabled = true;
+    //     PlayGamesPlatform.Activate();
+    //
+    //     FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+    //     {
+    //         if (task.Result == DependencyStatus.Available)
+    //         {
+    //             Auth = FirebaseAuth.DefaultInstance;
+    //             Auth.StateChanged += OnAuthStateChanged;
+    //         }
+    //         else
+    //         {
+    //             Debug.LogError(string.Format("[FIREBASE] ERROR: {0}", task.Result));
+    //         }
+    //     });
+    // }
+
+    void OnAuthStateChanged(object sender, EventArgs e)
+    {
+        IsLoggedIn = Auth.CurrentUser != null;
+        User = Auth.CurrentUser;
     }
-    void InitFirebase()
+
+    public void Login(Action<AuthResult> onSuccess, Action<string> onFail = null)
     {
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
-            if (task.Result == DependencyStatus. Available)
+        Auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCanceled)
             {
-                auth = FirebaseAuth.DefaultInstance;
-                Debug.Log("Firebase Auth initializedsuccessfully.");
+                onFail?.Invoke("CANCELED");
+            }
+            else if (task.IsFaulted)
+            {
+                onFail?.Invoke(task.Exception.Message);
             }
             else
             {
-                Debug.LogError("Could not resolve Firebasedependencies: " + task.Result);
+                onSuccess?.Invoke(task.Result);
             }
         });
     }
-    public void GoogleSignInClick()
-    {
-        try
-        {
-            GoogleSignIn.Configuration = new
-                GoogleSignInConfiguration
-                {
-                    WebClientId = "anmsg98",
-                    RequestIdToken = true,
-                    UseGameSignIn = false,
-                    RequestEmail = true
-                };
-            GoogleSignIn.DefaultInstance.SignIn().ContinueWith (task =>
-            {
-                if (task.IsFaulted)
-                {
-                    test.text += "SignIn Erгог:" + task. Exception;
-                }
-                else if (task. IsCanceled)
-                {
-                    test.text += "SignIn Canceled: ";
-                }
-                else
-                {
-                    OnGoogleAuthenticatedFinished(task);
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            test.text += "GoogleSignInClick Exception: "+ ex.Message;
-        }
-    }
-    void OnGoogleAuthenticatedFinished (Task<GoogleSignInUser>
-        task)
-    {
-        if (task.IsFaulted)
-        {
-            Debug.LogError("Faulted");
-        }
-        else if (task. IsCanceled)
-        {
-            Debug.LogError("Cancelled");
-        }
-        else
-        {
-            Firebase.Auth.Credential credential =
-                Firebase.Auth.GoogleAuthProvider.GetCredential (task. Result. IdToken,null);
-            auth. SignInWithCredentialAsync(credential).ContinueWithOnMainThread(task => {
-                if (task. IsCanceled)
-                {
-                    return;
-                }
-                if (task.IsFaulted)
-                {
-                    Debug.LogError("SignInWithCredentialAsyncencountered an error: "+ task. Exception);
-                    return;
-                }
-                user = auth.CurrentUser;
-                Username.text = user.DisplayName;
-                UserEmail.text = user.Email;
-                LoginScreen.SetActive (false);
-                ProfileScreen.SetActive(true);
-                //StartCoroutine (LoadImage(CheckImageUrl(user.PhotoUrl.ToString())));
-            });
-        }
-    }
+
+    // public void LoginWithGoogle(Action<AuthResult> onSuccess, Action<string> onFail)
+    // {
+    //     Social.localUser.Authenticate(success =>
+    //     {
+    //         if (success)
+    //         {
+    //             var idToken = ((PlayGamesLocalUser)Social.localUser).GetIdToken();
+    //             var credential = GoogleAuthProvider.GetCredential(idToken, null);
+    //
+    //             Auth.SignInAndRetrieveDataWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
+    //             {
+    //                 if (task.IsCanceled)
+    //                 {
+    //                     onFail?.Invoke("CANCELED");
+    //                 }
+    //                 else if (task.IsFaulted)
+    //                 {
+    //                     onFail?.Invoke(task.Exception.Message);
+    //                 }
+    //                 else
+    //                 {
+    //                     onSuccess?.Invoke(task.Result);
+    //                 }
+    //             });
+    //         }
+    //         else
+    //         {
+    //             onFail?.Invoke("Failed to retrieve Google play games authorization code");
+    //         }
+    //     });
+    //  }
 }
