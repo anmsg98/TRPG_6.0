@@ -1,94 +1,68 @@
-using System;
+using Google;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
-using GooglePlayGames;
-using GooglePlayGames.BasicApi;
-using Firebase;
-using Firebase.Auth;
-using Firebase.Extensions;
+
 public class LoginSystem : MonoBehaviour
 {
-    public FirebaseAuth Auth { get; private set; }
-    public FirebaseUser User { get; private set; }
-    public bool IsLoggedIn { get; private set; }
-
-    public void start()
+    private string web_client_id = "420891439018-6njr6rivluqb0405gdumhjq7lqgqddhs.apps.googleusercontent.com";
+    public TMP_Text loginMessage;
+    private void Awake()
     {
-    }// public void Initialize()
-    // {
-    //     var config = new PlayGamesClientConfiguration.Builder().RequestIdToken().Build();
-    //
-    //     PlayGamesPlatform.InitializeInstance(config);
-    //     PlayGamesPlatform.DebugLogEnabled = true;
-    //     PlayGamesPlatform.Activate();
-    //
-    //     FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
-    //     {
-    //         if (task.Result == DependencyStatus.Available)
-    //         {
-    //             Auth = FirebaseAuth.DefaultInstance;
-    //             Auth.StateChanged += OnAuthStateChanged;
-    //         }
-    //         else
-    //         {
-    //             Debug.LogError(string.Format("[FIREBASE] ERROR: {0}", task.Result));
-    //         }
-    //     });
-    // }
-
-    void OnAuthStateChanged(object sender, EventArgs e)
-    {
-        IsLoggedIn = Auth.CurrentUser != null;
-        User = Auth.CurrentUser;
+        Init();
     }
-
-    public void Login(Action<AuthResult> onSuccess, Action<string> onFail = null)
+    private void Init()
     {
-        Auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(task =>
+        GoogleSignIn.Configuration = new GoogleSignInConfiguration
         {
-            if (task.IsCanceled)
-            {
-                onFail?.Invoke("CANCELED");
-            }
-            else if (task.IsFaulted)
-            {
-                onFail?.Invoke(task.Exception.Message);
-            }
-            else
-            {
-                onSuccess?.Invoke(task.Result);
-            }
-        });
+            WebClientId = web_client_id,
+            UseGameSignIn = false,
+            RequestEmail = true,
+            RequestIdToken = true
+        };
     }
 
-    // public void LoginWithGoogle(Action<AuthResult> onSuccess, Action<string> onFail)
-    // {
-    //     Social.localUser.Authenticate(success =>
-    //     {
-    //         if (success)
-    //         {
-    //             var idToken = ((PlayGamesLocalUser)Social.localUser).GetIdToken();
-    //             var credential = GoogleAuthProvider.GetCredential(idToken, null);
-    //
-    //             Auth.SignInAndRetrieveDataWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
-    //             {
-    //                 if (task.IsCanceled)
-    //                 {
-    //                     onFail?.Invoke("CANCELED");
-    //                 }
-    //                 else if (task.IsFaulted)
-    //                 {
-    //                     onFail?.Invoke(task.Exception.Message);
-    //                 }
-    //                 else
-    //                 {
-    //                     onSuccess?.Invoke(task.Result);
-    //                 }
-    //             });
-    //         }
-    //         else
-    //         {
-    //             onFail?.Invoke("Failed to retrieve Google play games authorization code");
-    //         }
-    //     });
-    //  }
+    public void SignIn()
+    {
+        Debug.Log("Calling SignIn");
+        GoogleSignIn.DefaultInstance.SignIn().ContinueWith(
+          OnAuthenticationFinished);
+    }
+
+    internal void OnAuthenticationFinished(Task<GoogleSignInUser> task)
+    {
+        Debug.Log("Authentication finished, processing on main thread");
+        MainThreadDispatcher.RunOnMainThread(() => ProcessAuthResult(task));
+    }
+
+    private void ProcessAuthResult(Task<GoogleSignInUser> task)
+    {
+        Debug.Log("Auth Result");
+        if (task.IsFaulted)
+        {
+            using (IEnumerator<System.Exception> enumerator = task.Exception.InnerExceptions.GetEnumerator())
+            {
+                if (enumerator.MoveNext())
+                {
+                    GoogleSignIn.SignInException error = (GoogleSignIn.SignInException)enumerator.Current;
+                    Debug.Log("Got Error: " + error.Status + " " + error.Message);
+                }
+                else
+                {
+                    Debug.Log("Got Unexpected Exception?!?" + task.Exception);
+                }
+            }
+        }
+        else if (task.IsCanceled)
+        {
+            Debug.Log("Canceled");
+        }
+        else
+        {
+            Debug.Log("Welcome: " + task.Result.DisplayName + "!");
+            Debug.Log(task.Result.Email + "!");
+            Debug.Log(task.Result.IdToken + "!");
+        }
+    }
 }
