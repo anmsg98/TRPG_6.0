@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using Firebase;
+using Firebase.Auth;
+using Firebase.Extensions;
 
 public class LoginSystem : MonoBehaviour
 {
     private string web_client_id = "420891439018-6njr6rivluqb0405gdumhjq7lqgqddhs.apps.googleusercontent.com";
     public TMP_Text loginMessage;
+    private Firebase.Auth.FirebaseAuth auth;
+    private Firebase.Auth.FirebaseUser user;
     private void Awake()
     {
         Init();

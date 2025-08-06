@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "420891439018-e19a3cs82frja0sho6dvf3r0tfaeenld.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anmsg98.trpg",
+            "certificate_hash": "91fffded48143ddb481c4ef621cb5c88d926a50c"
+          }
+        },
+        {
+          "client_id": "420891439018-nmalfjaeorm4gq0101bco79dkiob11fu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anmsg98.trpg",
+            "certificate_hash": "6f42e7aca260c9ac6d1922eb5af92ca7cc487201"
+          }
+        },
+        {
           "client_id": "420891439018-6njr6rivluqb0405gdumhjq7lqgqddhs.apps.googleusercontent.com",
           "client_type": 3
         }
