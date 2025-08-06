@@ -13,10 +13,28 @@ public class LoginSystem : MonoBehaviour
     public TMP_Text loginMessage;
     private Firebase.Auth.FirebaseAuth auth;
     private Firebase.Auth.FirebaseUser user;
+
     private void Awake()
     {
         Init();
     }
+
+    private void Start()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.Result == DependencyStatus.Available)
+            {
+                auth = FirebaseAuth.DefaultInstance;
+                Debug.Log("Firebase Auth initializedsuccessfully.");
+            }
+            else
+            {
+                Debug.LogError("Could not resolve Firebasedependencies: " + task.Result);
+            }
+        });
+    }
+
     private void Init()
     {
         GoogleSignIn.Configuration = new GoogleSignInConfiguration
@@ -32,7 +50,7 @@ public class LoginSystem : MonoBehaviour
     {
         Debug.Log("Calling SignIn");
         GoogleSignIn.DefaultInstance.SignIn().ContinueWith(
-          OnAuthenticationFinished);
+            OnAuthenticationFinished);
     }
 
     internal void OnAuthenticationFinished(Task<GoogleSignInUser> task)
@@ -68,6 +86,39 @@ public class LoginSystem : MonoBehaviour
             Debug.Log("Welcome: " + task.Result.DisplayName + "!");
             Debug.Log(task.Result.Email + "!");
             Debug.Log(task.Result.IdToken + "!");
+            LoginSuccess(task);
+        }
+    }
+
+    private void LoginSuccess(Task<GoogleSignInUser> task)
+    {
+        if (task.IsFaulted)
+        {
+            Debug.LogError("Faulted");
+        }
+        else if (task.IsCanceled)
+        {
+            Debug.LogError("Cancelled");
+        }
+        else
+        {
+            Firebase.Auth.Credential credential =
+                Firebase.Auth.GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
+            auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCanceled)
+                {
+                    return;
+                }
+
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("SignInWithCredentailAsync encountered an error: " + task.Exception);
+                    return;
+                }
+
+                user = auth.CurrentUser;
+            });
         }
     }
 }
