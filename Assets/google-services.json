@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "420891439018",
+    "firebase_url": "https://unity-trpg-default-rtdb.firebaseio.com"
     "project_id": "unity-trpg",
     "storage_bucket": "unity-trpg.firebasestorage.app"
   },

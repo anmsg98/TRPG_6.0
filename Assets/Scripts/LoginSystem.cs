@@ -16,10 +16,26 @@ public class LoginSystem : MonoBehaviour
 
     private void Awake()
     {
-        Init();
+        GoogleLoginInfoInit();
     }
 
     private void Start()
+    {
+        FirebaseAuthInit();
+    }
+
+    private void GoogleLoginInfoInit()
+    {
+        GoogleSignIn.Configuration = new GoogleSignInConfiguration
+        {
+            WebClientId = web_client_id,
+            UseGameSignIn = false,
+            RequestEmail = true,
+            RequestIdToken = true
+        };
+    }
+
+    private void FirebaseAuthInit()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
@@ -33,17 +49,6 @@ public class LoginSystem : MonoBehaviour
                 Debug.LogError("Could not resolve Firebasedependencies: " + task.Result);
             }
         });
-    }
-
-    private void Init()
-    {
-        GoogleSignIn.Configuration = new GoogleSignInConfiguration
-        {
-            WebClientId = web_client_id,
-            UseGameSignIn = false,
-            RequestEmail = true,
-            RequestIdToken = true
-        };
     }
 
     public void SignIn()
